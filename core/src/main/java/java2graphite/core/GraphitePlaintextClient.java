@@ -33,6 +33,10 @@ public class GraphitePlaintextClient implements GraphiteClient {
 
     @Override
     public void connect() throws IOException {
+        if (socket != null) {
+            throw new IllegalStateException("Connection has already been established");
+        }
+
         socket = socketFactory.createSocket(serverAddress.getHostName(), serverAddress.getPort());
         writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
     }
@@ -52,8 +56,15 @@ public class GraphitePlaintextClient implements GraphiteClient {
 
     @Override
     public void close() throws IOException {
+        if (socket == null) {
+            throw new IllegalStateException("Connection is not established or closed");
+        }
+
         writer.close();
         socket.close();
+
+        writer = null;
+        socket = null;
     }
 
     public InetSocketAddress getServerAddress() {

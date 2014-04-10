@@ -103,6 +103,24 @@ public class GraphitePlaintextClientTest {
         assertSent("a.b.c 123.45 2345");
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testCloseBeforeOpen() throws Exception {
+        graphitePlaintextClient.close();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testDoubleConnect() throws Exception {
+        graphitePlaintextClient.connect();
+        graphitePlaintextClient.connect();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testDoubleClose() throws Exception {
+        graphitePlaintextClient.connect();
+        graphitePlaintextClient.close();
+        graphitePlaintextClient.close();
+    }
+
     private void assertSent(String... lines) {
         String expected = join(lines, '\n');
         String actual = new String(byteOutputStream.toByteArray());
@@ -120,4 +138,5 @@ public class GraphitePlaintextClientTest {
 
         return sb.toString();
     }
+
 }
