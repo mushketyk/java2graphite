@@ -1,10 +1,10 @@
 package java2graphite.core;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.net.SocketFactory;
+import java.io.ByteArrayOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -29,7 +29,7 @@ public class GraphitePlaintextClientTest {
     private static final int PORT = 1234;
 
     private static final InetSocketAddress SERVER_ADDRESS = new InetSocketAddress(HOST, PORT);
-    private ByteOutputStream byteOutputStream;
+    private ByteArrayOutputStream byteOutputStream;
 
     @Before
     public void before() throws Exception {
@@ -38,7 +38,7 @@ public class GraphitePlaintextClientTest {
         socket = mock(Socket.class);
 
         graphitePlaintextClient = new GraphitePlaintextClient(SERVER_ADDRESS, socketFactory, clock);
-        byteOutputStream = new ByteOutputStream();
+        byteOutputStream = new ByteArrayOutputStream();
 
         when(socketFactory.createSocket(anyString(), anyInt())).thenReturn(socket);
         when(socket.getOutputStream()).thenReturn(byteOutputStream);
@@ -83,9 +83,29 @@ public class GraphitePlaintextClientTest {
         assertSent("a.b.c 10 2345");
     }
 
+    @Test
+    public void testSendDouble() throws Exception {
+        long timestamp = 2345;
+        when(clock.currentTime()).thenReturn(timestamp);
+
+        graphitePlaintextClient.connect();
+        graphitePlaintextClient.send("a.b.c", 123.45);
+        assertSent("a.b.c 123.45 2345");
+    }
+
+    @Test
+    public void testSendFloat() throws Exception {
+        long timestamp = 2345;
+        when(clock.currentTime()).thenReturn(timestamp);
+
+        graphitePlaintextClient.connect();
+        graphitePlaintextClient.send("a.b.c", (float) 123.45);
+        assertSent("a.b.c 123.45 2345");
+    }
+
     private void assertSent(String... lines) {
         String expected = join(lines, '\n');
-        String actual = new String(byteOutputStream.getBytes(), 0, byteOutputStream.getCount());
+        String actual = new String(byteOutputStream.toByteArray());
 
         assertEquals(actual, expected);
     }
